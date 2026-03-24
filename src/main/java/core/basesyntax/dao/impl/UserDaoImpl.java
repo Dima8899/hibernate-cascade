@@ -15,13 +15,29 @@ public class UserDaoImpl extends AbstractDao implements UserDao {
 
     @Override
     public User create(User entity) {
-        return null;
-
+        Session session = null;
+        Transaction transaction = null;
+        try {
+            session = factory.openSession();
+            transaction = session.beginTransaction();
+            session.persist(entity);
+            transaction.commit();
+            return entity;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Can't insert user into DB", e);
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
     }
 
     @Override
     public User get(Long id) {
-        try (Session session = factory.openSession();) {
+        try (Session session = factory.openSession()) {
             return session.get(User.class, id);
         } catch (Exception e) {
             throw new RuntimeException("Can't get user by id " + id, e);
@@ -30,9 +46,11 @@ public class UserDaoImpl extends AbstractDao implements UserDao {
 
     @Override
     public List<User> getAll() {
-        try (Session session = factory.openSession();) {
-            Query<User> commentQuery = session.createQuery("from User", User.class);
-            return commentQuery.getResultList();
+        try (Session session = factory.openSession()) {
+            Query<User> userQuery = session.createQuery("from User", User.class);
+            return userQuery.getResultList();
+        } catch (Exception e) {
+            throw new RuntimeException("Can't get all users from DB", e);
         }
     }
 
@@ -40,22 +58,20 @@ public class UserDaoImpl extends AbstractDao implements UserDao {
     public void remove(User entity) {
         Session session = null;
         Transaction transaction = null;
-
         try {
             session = factory.openSession();
             transaction = session.beginTransaction();
-
             User user = session.get(User.class, entity.getId());
             if (user != null) {
-                session.remove(entity);
+                session.remove(user);
             }
-
             transaction.commit();
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             if (transaction != null) {
                 transaction.rollback();
             }
-            throw new RuntimeException("Can't remove User from db with id" + entity.getId(), e);
+            throw new RuntimeException("Can't remove user from DB with id "
+                    + entity.getId(), e);
         } finally {
             if (session != null) {
                 session.close();
