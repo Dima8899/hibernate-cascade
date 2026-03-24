@@ -55,6 +55,8 @@ public class CommentDaoImpl extends AbstractDao implements CommentDao {
         ) {
             Query<Comment> commentQuery = session.createQuery("from Comment", Comment.class);
             return commentQuery.getResultList();
+        } catch (Exception e) {
+            throw new RuntimeException("Can't get all comments from DB", e);
         }
     }
 
@@ -70,7 +72,7 @@ public class CommentDaoImpl extends AbstractDao implements CommentDao {
             Comment comment = session.get(Comment.class, entity.getId());
 
             if (comment != null) {
-                session.remove(entity);
+                session.remove(comment);
             }
 
             transaction.commit();
