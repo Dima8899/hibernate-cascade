@@ -6,6 +6,7 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 
 public class UserDaoImpl extends AbstractDao implements UserDao {
     public UserDaoImpl(SessionFactory sessionFactory) {
@@ -20,12 +21,19 @@ public class UserDaoImpl extends AbstractDao implements UserDao {
 
     @Override
     public User get(Long id) {
-        return null;
+        try (Session session = factory.openSession();) {
+            return session.get(User.class, id);
+        } catch (Exception e) {
+            throw new RuntimeException("Can't get user by id " + id, e);
+        }
     }
 
     @Override
     public List<User> getAll() {
-        return null;
+        try (Session session = factory.openSession();) {
+            Query<User> commentQuery = session.createQuery("from User", User.class);
+            return commentQuery.getResultList();
+        }
     }
 
     @Override
